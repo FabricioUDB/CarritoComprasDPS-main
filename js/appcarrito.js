@@ -127,30 +127,40 @@ function limpiarHtml() {
     contenedorCarrito.innerHTML = "";
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    carritoArray = JSON.parse(localStorage.getItem("carrito")) ?? [];
+    elementoHtml();
+});
+
+// Selecciona el botón de pagar correctamente
 const pagarCarritoBtn = document.querySelector('#pagar-carrito');
-pagarCarritoBtn.addEventListener('click', generarPDF);
+if (pagarCarritoBtn) {
+    pagarCarritoBtn.addEventListener('click', generarPDF);
+}
 
 function generarPDF() {
-  if (carritoArray.length === 0) {
-      alert("El carrito está vacío. Agrega productos antes de pagar.");
-      return;
-  }
+    if (carritoArray.length === 0) {
+        alert("El carrito está vacío. Agrega productos antes de pagar.");
+        return;
+    }
 
-  const doc = new jsPDF();
+    const { jsPDF } = window.jspdf; // Asegurar que se use correctamente
+    const doc = new jsPDF();
 
-  let y = 20;
-  doc.setFontSize(18);
-  doc.text("Resumen de Compra", 10, y);
-  y += 10;
+    let y = 20;
+    doc.setFontSize(18);
+    doc.text("Resumen de Compra", 10, y);
+    y += 10;
 
-  doc.setFontSize(12);
-  carritoArray.forEach((curso, index) => {
-      doc.text(`${index + 1}. ${curso.nombre} - $${curso.precio} x ${curso.cantidad}`, 10, y);
-      y += 10;
-  });
+    doc.setFontSize(12);
+    carritoArray.forEach((curso, index) => {
+        let precio = parseFloat(curso.precio.replace('$', '').trim()) * curso.cantidad;
+        doc.text(`${index + 1}. ${curso.nombre} - $${curso.precio} x ${curso.cantidad} = $${precio.toFixed(2)}`, 10, y);
+        y += 10;
+    });
 
-  const total = carritoArray.reduce((sum, curso) => sum + (parseFloat(curso.precio.replace('$', '')) * curso.cantidad), 0);
-  doc.text(`Total: $${total.toFixed(2)}`, 10, y);
+    const total = carritoArray.reduce((sum, curso) => sum + (parseFloat(curso.precio.replace('$', '').trim()) * curso.cantidad), 0);
+    doc.text(`Total: $${total.toFixed(2)}`, 10, y + 10);
 
-  doc.save("resumen_compra.pdf");
+    doc.save("resumen_compra.pdf");
 }
